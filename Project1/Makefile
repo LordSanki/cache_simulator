@@ -1,2 +1,28 @@
+CC   = gcc
+CXX  = g++
 
+INCLUDE     = -I.
+CFLAGS  = $(INCLUDE)
+LFLAGS  =
+LIBS    =
 
+SRC     = main.cpp
+HEADERS = AddressDecoder.h Cache.h CustomTypes.h MainMemory.h Memory.h ResultGenerator.h TraceReader.h
+
+TARGET  = sim_cache
+
+OBJECTS = $(SRC:%.cpp=%.o)
+
+all: BINARY
+
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+clobber:
+	rm -f $(OBJECTS)
+
+BINARY: $(OBJECTS)
+	$(CXX) $(LFLAGS) $(OBJECTS) $(LIBS) -o $(TARGET)
+
+%.o: %.cpp
+	$(CXX) -c $(CFLAGS) $^ -o $@

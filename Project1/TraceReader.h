@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <exception>
 #include <cstdlib>
+#include <Memory.h>
 
 namespace CacheSimulator
 {
@@ -16,7 +17,7 @@ namespace CacheSimulator
       e_Null  =2
     };
     private:
-      FILE *fp;
+      FILE *_fp;
       InstructionType _nextInst;
       ui32 _nextAddr;
       void parse()
@@ -24,8 +25,8 @@ namespace CacheSimulator
         c8 ins;
         c8 buff[100] = {0};
         _nextInst = e_Null;
-        _nextAddr = NULL;
-        fscanf(fp, "%c", &ins);
+        _nextAddr = 0U;
+        fscanf(_fp, "%c", &ins);
         switch(ins)
         {
           case 'r':
@@ -47,15 +48,21 @@ namespace CacheSimulator
       TraceReader(c8 *filename)
         :_fp(NULL)
       {
-        _fp = fopen(filename);
-        if(fp == NULL) std::throw std::exception("Unable to open trace file");
+        _fp = fopen(filename, "rb");
+        if(_fp == NULL) throw "Unable to open trace file";
         parse();
       }
-      bool operator bool()
+      ~TraceReader()
+      {
+        if(_fp)
+          fclose(_fp);
+        _fp = NULL;
+      }
+      operator bool() const
       {
         return (_nextInst != e_Null);
       }
-      void operator ++()
+      void operator ++(i32)
       {
         parse();
       }
@@ -69,7 +76,7 @@ namespace CacheSimulator
           case e_Write:
             m->write(_nextAddr);
             break;
-          case default:
+          default:
             break;
         }
       }

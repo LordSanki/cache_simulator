@@ -1,7 +1,7 @@
 #ifndef __RESULT_GENERATOR_H__
 #define __RESULT_GENERATOR_H__
 
-#include <AbstractMemory.h>
+#include <Memory.h>
 
 namespace CacheSimulator
 {

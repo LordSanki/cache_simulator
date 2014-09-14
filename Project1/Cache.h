@@ -3,6 +3,7 @@
 
 #include <Memory.h>
 #include <CustomTypes.h>
+#include <AddressDecoder.h>
 
 namespace CacheSimulator
 {
@@ -18,19 +19,35 @@ namespace CacheSimulator
     e_WTNA=1
   };
 
-
-
   class Cache: public Memory
   {
     public:
 
       Cache(ui16 block_size, ui16 size, ui16 assoc,
-          ReplacementPolicy rPol, WritePolicy wPol, Memory *next);
+          ReplacementPolicy rPol, WritePolicy wPol, Memory *next)
+        :_sets(size/(block_size*assoc)),
+        _addrDec(_sets, block_size)
+      {
+        _next = next;
+        _rPolicy = rPol;
+        _wPolicy = wPol;
+        _size = size;
+        _assoc = assoc;
+        _blocksize = block_size;
+      }
 
+    protected:
       // function to read data
-      ui8 read(ui32 addr);
+      ui8 readC(ui32 addr)
+      {
+      }
       // function to write data
-      void write(ui32 addr, ui8 data = DATA);
+      void writeC(ui32 addr, ui8 data = DATA)
+      {
+      }
+      void initC()
+      {
+      }
 
     private:
       // total bytes of data store
@@ -47,8 +64,8 @@ namespace CacheSimulator
       ui16 _sets;
       // pointer to object of next memory
       Memory *_next;
-      // pointer to object of AddressHelper
-      AddressHelper *_addrHelp;
+      // pointer to object of AddressDecoder
+      AddressDecoder _addrDec;
   };
 };
 

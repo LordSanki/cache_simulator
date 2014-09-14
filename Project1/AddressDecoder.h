@@ -51,7 +51,8 @@ namespace CacheSimulator
       ui16 find_log2(ui16 val)
       {
         ui16 count = 1;
-        for(ui16 i=0; i<15; i++)
+        ui16 i;
+        for(i=0; i<sizeof(val); i++)
         {
           if(count == val)
             break;

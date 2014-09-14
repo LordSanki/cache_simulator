@@ -43,11 +43,11 @@ namespace CacheSimulator
     
     protected:
       // abstract function for initialization of memory
-      void initC () = 0;
+      virtual void initC () = 0;
       // abstract function for customized reads
-      ui8 readC (ui32 addr) = 0;
+      virtual ui8 readC (ui32 addr) = 0;
       // abstract function for customized writes
-      void writeC (ui32 addr, ui8 data) = 0;
+      virtual void writeC (ui32 addr, ui8 data) = 0;
 
     private:
       // counter for tracking reads

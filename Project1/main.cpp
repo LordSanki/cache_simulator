@@ -1,6 +1,9 @@
-#include <CacheStructure.h>
 #include <iostream>
 #include <cstdlib>
+#include <Cache.h>
+#include <MainMemory.h>
+#include <ResultGenerator.h>
+#include <TraceReader.h>
 
 using namespace std;
 using namespace CacheSimulator;
@@ -20,7 +23,7 @@ int main(int argc, char **argv)
   ReplacementPolicy rP  = (ReplacementPolicy)atoi(argv[4]);
   WritePolicy wP        = (WritePolicy)atoi(argv[5]);
 
-  MainMemory *mm = new MainMemory();
+  MainMemory *mm  = new MainMemory();
 
   Cache *l1 = new Cache( block_size, size, assoc, rP, wP, (Memory*)mm);
   
@@ -31,6 +34,9 @@ int main(int argc, char **argv)
 
   ResultGenerator rGen(argc, argv);
   rGen<<l1;
+
+  delete l1;
+  delete mm;
 
   return 0;
 }
