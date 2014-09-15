@@ -12,6 +12,7 @@ namespace CacheSimulator
       MainMemory()
       {
         _next = NULL;
+        name("MainMemory");
       }
       ~MainMemory() 
       {

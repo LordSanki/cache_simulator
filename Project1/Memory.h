@@ -17,6 +17,8 @@ namespace CacheSimulator
         _reads = 0;
         _writes = 0;
         initC ();
+        if(_next)
+          _next->init();
       }
 
       // function to read data
@@ -33,18 +35,16 @@ namespace CacheSimulator
       }
 
       // getter for reads
-      ui32 reads ()  { return _reads;  }
+      ui32 reads () const  { return _reads;  }
       // getter for writes
-      ui32 writes () { return _writes; }
+      ui32 writes () const { return _writes; }
       // getter for name
-      std::string name ()       { return _name; }
+      std::string name () const { return _name; }
       // setter for name
       void name (std::string n) { _name = n;    }
-      
-      Memory *getNextMemory()
-      {
-        return _next;
-      }
+      // read accessor for next
+      Memory *next() const { return _next; }
+      // vitual desctructor
       virtual ~Memory()
       {
         if(_next)

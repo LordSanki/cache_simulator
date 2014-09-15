@@ -12,5 +12,5 @@ typedef unsigned short int ui16;
 typedef signed char i8;
 typedef unsigned char ui8;
 typedef char c8;
-
+#define DO(X) std::cout<<#X<<" : "<<X<<std::endl;std::cout.flush();
 #endif //__CUSTOM_TYPES_H__

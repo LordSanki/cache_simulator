@@ -26,6 +26,8 @@ int main(int argc, char **argv)
   //MainMemory *mm  = new MainMemory();
 
   Cache *l1 = new Cache( block_size, size, assoc, rP, wP, (Memory*)new MainMemory());
+  l1->init(); 
+  l1->name("L1");
 
   ResultGenerator rGen(argc, argv);
 
