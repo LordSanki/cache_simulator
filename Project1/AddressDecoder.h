@@ -52,7 +52,7 @@ namespace CacheSimulator
       {
         ui16 count = 1;
         ui16 i;
-        for(i=0; i<sizeof(val); i++)
+        for(i=0; i<32; i++)
         {
           if(count == val)
             break;
@@ -70,14 +70,14 @@ namespace CacheSimulator
         _boMask = 0U;
         for(ui8 i=0U; i<_boBits; i++)
         {
-          _boBits = _boBits<<1U + 1U;
+          _boMask = (_boMask<<1U)+ 1U;
         }
         
         // generating bitmask for index
         _indexMask = 0U;
         for(ui8 i=0; i<_indexBits; i++)
         {
-          _indexMask = _indexMask<<1U + 1U;
+          _indexMask = (_indexMask<<1U) + 1U;
         }
         _indexMask = _indexMask<<_boBits;
 
@@ -85,7 +85,7 @@ namespace CacheSimulator
         _tagMask = 0U;
         for(ui8 i=0; i<_tagBits; i++)
         {
-          _tagMask = _tagMask<<1U + 1U;
+          _tagMask = (_tagMask<<1U) + 1U;
         }
         _tagMask = _tagMask<<(_boBits+_indexBits);
       }

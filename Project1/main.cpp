@@ -23,20 +23,19 @@ int main(int argc, char **argv)
   ReplacementPolicy rP  = (ReplacementPolicy)atoi(argv[4]);
   WritePolicy wP        = (WritePolicy)atoi(argv[5]);
 
-  MainMemory *mm  = new MainMemory();
+  //MainMemory *mm  = new MainMemory();
 
-  Cache *l1 = new Cache( block_size, size, assoc, rP, wP, (Memory*)mm);
-  
+  Cache *l1 = new Cache( block_size, size, assoc, rP, wP, (Memory*)new MainMemory());
+
+  ResultGenerator rGen(argc, argv);
+
   for(TraceReader tReader(argv[6]); tReader; tReader++)
   {
     tReader>>l1;
   }
-
-  ResultGenerator rGen(argc, argv);
   rGen<<l1;
 
   delete l1;
-  delete mm;
 
   return 0;
 }

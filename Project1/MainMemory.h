@@ -3,12 +3,19 @@
 
 #include <Memory.h>
 #include <CustomTypes.h>
-
+#include <iostream>
 namespace CacheSimulator
 {
   class MainMemory: public Memory
   {
     public:
+      MainMemory()
+      {
+        _next = NULL;
+      }
+      ~MainMemory() 
+      {
+      }
       //function to initialize memory
       void initC()
       {
@@ -16,6 +23,7 @@ namespace CacheSimulator
       // function to read data
       ui8 readC(ui32 addr)
       {
+        return DATA;
       }
       // function to write data
       void writeC(ui32 addr, ui8 data)

@@ -3,7 +3,7 @@
 
 #include <string>
 #include <CustomTypes.h>
-
+#include <iostream>
 # define DATA 255U
 
 namespace CacheSimulator
@@ -40,7 +40,17 @@ namespace CacheSimulator
       std::string name ()       { return _name; }
       // setter for name
       void name (std::string n) { _name = n;    }
-    
+      
+      Memory *getNextMemory()
+      {
+        return _next;
+      }
+      virtual ~Memory()
+      {
+        if(_next)
+          delete _next;
+      }
+
     protected:
       // abstract function for initialization of memory
       virtual void initC () = 0;
@@ -48,6 +58,8 @@ namespace CacheSimulator
       virtual ui8 readC (ui32 addr) = 0;
       // abstract function for customized writes
       virtual void writeC (ui32 addr, ui8 data) = 0;
+      // pointer to object of next memory
+      Memory *_next;
 
     private:
       // counter for tracking reads

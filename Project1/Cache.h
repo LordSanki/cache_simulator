@@ -4,10 +4,10 @@
 #include <Memory.h>
 #include <CustomTypes.h>
 #include <AddressDecoder.h>
-
+#include <iostream>
+#include <TagStore.h>
 namespace CacheSimulator
 {
-
   enum ReplacementPolicy
   {
     e_LRU=0,
@@ -18,7 +18,6 @@ namespace CacheSimulator
     e_WBWA=0,
     e_WTNA=1
   };
-
   class Cache: public Memory
   {
     public:
@@ -35,18 +34,26 @@ namespace CacheSimulator
         _assoc = assoc;
         _blocksize = block_size;
       }
-
+      ~Cache()
+      {
+      }
     protected:
       // function to read data
       ui8 readC(ui32 addr)
       {
+        if(!cacheHit(addr))
+          cacheMiss(addr);
+        return DATA;
       }
       // function to write data
-      void writeC(ui32 addr, ui8 data = DATA)
+      void writeC(ui32 addr, ui8)
       {
       }
       void initC()
       {
+        TagStore tStore(_sets);
+        for(ui32 i=0; i<_assoc; i++)
+          _tags.push_back(tStore);
       }
 
     private:
@@ -62,10 +69,35 @@ namespace CacheSimulator
       WritePolicy _wPolicy;
       // no of sets = size/(assoc*blocksize)
       ui16 _sets;
-      // pointer to object of next memory
-      Memory *_next;
       // pointer to object of AddressDecoder
       AddressDecoder _addrDec;
+      // tag store memory
+      AssociateTagStore _tags;
+    private:
+      void cacheMiss(ui32 addr)
+      {
+        _next->read(addr);
+        replaceTag(addr);
+      }
+      void replaceTag(ui32 addr)
+      {
+        ui32 index = _addrDec.index(addr);
+        TagEntry tag(_addrDec.tag(addr));
+        if(_assoc < 2)
+          _tags.front().at(index) = tag;
+      }
+      bool cacheHit(ui32 addr)
+      {
+        ui32 index = _addrDec.index(addr);
+        ui32 tag = _addrDec.tag(addr);
+        for(AssociateTagStore::const_iterator it = _tags.begin();
+            it != _tags.end(); it++)
+        {
+          if((*it)[index] == tag)
+            return true;
+        }
+        return false;
+      }
   };
 };
 

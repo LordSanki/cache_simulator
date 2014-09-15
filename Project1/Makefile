@@ -2,7 +2,7 @@ CC   = gcc
 CXX  = g++
 
 INCLUDE     = -I.
-CFLAGS  = $(INCLUDE)
+CFLAGS  = $(INCLUDE) -g -Wall
 LFLAGS  =
 LIBS    =
 
