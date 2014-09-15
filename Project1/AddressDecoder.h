@@ -22,12 +22,12 @@ namespace CacheSimulator
       // function to get tag
       ui32 tag(ui32 addr)
       {
-        return addr&_tagMask;
+        return (addr&_tagMask)>>(_boBits+_indexBits);
       }
       // function to get index
       ui32 index(ui32 addr)
       {
-        return addr&_indexMask;
+        return (addr&_indexMask)>>_boBits;
       }
       // function to get block offset
       ui32 bo(ui32 addr)
