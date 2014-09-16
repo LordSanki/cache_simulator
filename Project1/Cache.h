@@ -47,6 +47,7 @@ namespace CacheSimulator
       ui32 whits() const {return _whits;}
       ui32 rPolicy() const {return (ui32)_rPolicy;}
       ui32 wPolicy() const {return (ui32)_wPolicy;}
+      ui32 wbacks() const {return _wbacks;}
     protected:
       // function to read data
       ui8 readC(ui32 addr)
@@ -60,13 +61,26 @@ namespace CacheSimulator
       // function to write data
       void writeC(ui32 addr, ui8)
       {
-        if(cacheHit(addr))
+        TagEntry &tag = cacheHit(addr);
+        if (tag)
+        {
           _whits++;
+        }
+
         switch(_wPolicy)
         {
           case e_WBWA:
+            if(tag)
+            {
+              tag.write();
+            }
+            else
+            {
+              cacheMiss(addr).write();
+            }
             break;
           case e_WTNA:
+            _next->write(addr);
             break;
           default:
             throw "Invalid Write Policy";
@@ -77,6 +91,7 @@ namespace CacheSimulator
       {
         _rhits = 0;
         _whits = 0;
+        _wbacks = 0;
         TagStore tStore(_sets);
         for(ui32 i=0; i<_assoc; i++)
           _tags.push_back(tStore);
@@ -98,36 +113,55 @@ namespace CacheSimulator
       ui32 _rhits;
       // counter for write hits
       ui32 _whits;
+      // counter for writebacks
+      ui32 _wbacks;
       // pointer to object of AddressDecoder
       AddressDecoder _addrDec;
       // tag store memory
       AssociateTagStore _tags;
     private:
-      void cacheMiss(ui32 addr)
+      TagEntry & cacheMiss(ui32 addr)
       {
         _next->read(addr);
-        replaceTag(addr);
+        return replaceTag(addr);
       }
-      void replaceTag(ui32 addr)
+      TagEntry & replaceTag(ui32 addr)
       {
+        static TagEntry null;
         ui32 index = _addrDec.index(addr);
-        TagEntry tag(_addrDec.tag(addr));
+        TagEntry new_tag(_addrDec.tag(addr));
         if(_assoc < 2)
-          _tags.front().at(index) = tag;
+        {
+          TagEntry & old_tag = _tags.front().at(index);
+          if (old_tag.dirty() && old_tag)
+          {
+            _wbacks++;
+            _next->write(addr);
+          }
+          old_tag = new_tag;
+          return old_tag;
+        }
+        else
+        {
+        }
+        return null;
       }
-      bool cacheHit(ui32 addr)
+      TagEntry & cacheHit(ui32 addr)
       {
+        static TagEntry null;
+        null = TagEntry();
         ui32 index = _addrDec.index(addr);
         ui32 tag = _addrDec.tag(addr);
-        for(AssociateTagStore::const_iterator it = _tags.begin();
+        for(AssociateTagStore::iterator it = _tags.begin();
             it != _tags.end(); it++)
         {
-          if((*it)[index] == tag)
+          TagEntry & temp = (*it)[index];
+          if( (temp == tag) && temp )
           {
-            return true;
+            return temp;
           }
         }
-        return false;
+        return null;
       }
   };
 };

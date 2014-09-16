@@ -22,14 +22,17 @@ namespace CacheSimulator
         _tag = 0U;
       }
       ui32 tag() const {return _tag;}
-      void read() 
-      {
-      }
+      void read() { }
       void write() { _dirty = true; }
-
+      bool dirty() const { return _dirty; }
+      operator bool() const { return _valid; }
       bool operator ==(const TagEntry &other) const
       {
         return (_tag == other.tag());
+      }
+      bool operator ==(ui32 tag) const
+      {
+        return (_tag == tag);
       }
     private:
       ui32 _tag;
