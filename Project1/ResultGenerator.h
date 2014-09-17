@@ -19,7 +19,7 @@ namespace CacheSimulator
       }
       void operator<<(Cache* mem)
       {
-        ui32 a,b,c,d;
+        ui32 a,b,c,d, f, g;
         f32 e;
 
         std::cout<<"===== Simulator configuration ====="<<std::endl;
@@ -48,37 +48,52 @@ namespace CacheSimulator
           std::cout<<std::endl;
         }
 
+        Memory *main = mem;
+        while(main->next()) main = main->next();
+
         std::cout<<"====== Simulation results (raw) ======"<<std::endl;
         a = mem->reads();
         b = mem->reads() - mem->rhits();
         c = mem->writes();
         d = mem->writes() - mem->whits();
-        e = ((f32)b+d)/((f32)a+c);
-
+        e = round_to( ((f64)b+d)/(a+c), 4U);
+        f = mem->wbacks();
+        g = main->writes() + main->reads();
         // Traversing to the main memory which is always the last element.
-        Memory *main = mem;
-        while(main->next()) main = main->next();
 
-        std::cout<<"a. number of L1 reads:           "<< a    <<std::endl;
-        std::cout<<"b. number of L1 read misses:     "<< b    <<std::endl;
-        std::cout<<"c. number of L1 writes:          "<< c    <<std::endl;
-        std::cout<<"d. number of L1 write misses:    "<< d    <<std::endl;
-        std::cout<<"e. L1 miss rate:                 "<< roundf(e * ROUNDFACTOR)/ROUNDFACTOR    <<std::endl;
-        std::cout<<"f. number of writebacks from L1: "<< mem->wbacks() <<std::endl;
-        std::cout<<"g. total memory traffic:         "<< main->writes() + main->reads() <<std::endl;
+        std::cout<<"a. number of L1 reads:           "<< a <<std::endl;
+        std::cout<<"b. number of L1 read misses:     "<< b <<std::endl;
+        std::cout<<"c. number of L1 writes:          "<< c <<std::endl;
+        std::cout<<"d. number of L1 write misses:    "<< d <<std::endl;
+        std::cout<<"e. L1 miss rate:                 "<< e <<std::endl;
+        std::cout<<"f. number of writebacks from L1: "<< f <<std::endl;
+        std::cout<<"g. total memory traffic:         "<< g <<std::endl;
 
-        f64 l1_hit_time = (mem->rhits() + mem->whits())
-          *(0.25 + 2.5 * (mem->size() / (512*1024)) 
-           + 0.025 * (mem->blocksize()/16) + 0.025 * mem->assoc());
-        f64 l1_miss_time = (b+d)*(20 + 0.5*(mem->blocksize() / 16 ));
+        f64 l1_hit_time = ((a+c))
+          *(0.25 + 2.5 * (mem->size() / (512.0f*1024)) 
+           + 0.025 * (mem->blocksize()/16.0f) + 0.025 * mem->assoc());
+        f64 l1_miss_time = (b+d)*(20.0f + 0.5*(mem->blocksize() / 16.0f ));
         //f64 l2_hit_time = 2.5ns + 2.5ns * (L2_Cache Size / 512kB) + 0.025ns * (L2_BLOCKSIZE / 16B) + 0.025ns * L2_SET_ASSOCIATIVITY;
         //f64 l2_miss_time =  20 ns + 0.5*(L2_BLOCKSIZE / 16 B/ns);
+        
+        f64 avg_access_time = (l1_hit_time+l1_miss_time)/(a+c);
+        avg_access_time = round_to(avg_access_time, 4U);
         std::cout<<"==== Simulation results (performance) ===="<<std::endl;
-        std::cout<<"1. average access time:         "<<(l1_hit_time+l1_miss_time)/(a+c)<<" ns"<<std::endl;
+        std::cout<<"1. average access time:         "<< avg_access_time <<" ns"<<std::endl;
       }
     private:
       c8 **_argv;
       i32 _argc;
+      f64 round_to(f64 val, ui32 digits)
+      {
+        ui32 factor = 1U;
+        while(digits !=0)
+        {
+          factor = factor*10U;
+          digits--;
+        }
+        return (round(val*factor)/factor);
+      }
   };
 };
 
