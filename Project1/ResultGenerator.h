@@ -69,6 +69,12 @@ namespace CacheSimulator
         std::cout<<"f. number of writebacks from L1: "<< f <<std::endl;
         std::cout<<"g. total memory traffic:         "<< g <<std::endl;
 
+#if 1
+        f64 l1_hit_time = (0.25 + 2.5 * (mem->size() / (512.0f*1024))
+            + 0.025 * (mem->blocksize()/16.0f) + 0.025 * mem->assoc());
+        f64 l1_miss_time = (20.0f + 0.5*(mem->blocksize() / 16.0f ));
+        f64 avg_access_time = l1_hit_time + (((f64)b+d)/(a+c) * l1_miss_time);
+#else
         f64 l1_hit_time = ((a+c))
           *(0.25 + 2.5 * (mem->size() / (512.0f*1024)) 
            + 0.025 * (mem->blocksize()/16.0f) + 0.025 * mem->assoc());
@@ -77,6 +83,7 @@ namespace CacheSimulator
         //f64 l2_miss_time =  20 ns + 0.5*(L2_BLOCKSIZE / 16 B/ns);
         
         f64 avg_access_time = (l1_hit_time+l1_miss_time)/(a+c);
+#endif
         avg_access_time = round_to(avg_access_time, 4U);
         std::cout<<"==== Simulation results (performance) ===="<<std::endl;
         std::cout<<"1. average access time:         "<< avg_access_time <<" ns"<<std::endl;
