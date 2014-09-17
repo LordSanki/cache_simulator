@@ -6,6 +6,7 @@
 
 namespace CacheSimulator
 {
+#define UNDEFINED_HISTORY 666
   class TagEntry
   {
     public:
@@ -13,17 +14,25 @@ namespace CacheSimulator
       {
         _dirty = false;
         _valid = true;
-        _tag = tag; 
+        _tag = tag;
+        _history = UNDEFINED_HISTORY;
       }
       TagEntry()
       {
         _valid = false;
         _dirty = false;
         _tag = 0U;
+        _history = UNDEFINED_HISTORY;
+      }
+      static TagEntry & invalidTag()
+      {
+        static TagEntry null;
+        null = TagEntry();
+        return null;
       }
       ui32 tag() const {return _tag;}
       void read() { }
-      void write() { _dirty = true; }
+      void write(bool flag) { _dirty = flag; }
       bool dirty() const { return _dirty; }
       operator bool() const { return _valid; }
       bool operator ==(const TagEntry &other) const
@@ -34,14 +43,17 @@ namespace CacheSimulator
       {
         return (_tag == tag);
       }
+      ui32 history() const {return _history;}
+      void history(ui32 hist) {_history = hist;}
     private:
+      ui32 _history;
       ui32 _tag;
       bool _valid;
       bool _dirty;
   };
 
-  typedef std::vector<TagEntry> TagStore;
-  typedef std::list<TagStore> AssociateTagStore;
+  typedef std::list<TagEntry> TagSets;
+  typedef std::vector<TagSets> TagStore;
 
 };
 

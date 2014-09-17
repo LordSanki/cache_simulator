@@ -6,13 +6,9 @@
 #include <AddressDecoder.h>
 #include <iostream>
 #include <TagStore.h>
+#include <ReplacementPolicy.h>
 namespace CacheSimulator
 {
-  enum ReplacementPolicy
-  {
-    e_LRU=0,
-    e_LFU=1
-  };
   enum WritePolicy
   {
     e_WBWA=0,
@@ -24,7 +20,7 @@ namespace CacheSimulator
     public:
 
       Cache(ui16 block_size, ui16 size, ui16 assoc,
-          ReplacementPolicy rPol, WritePolicy wPol, Memory *next)
+          ReplacementPolicy::Types rPol, WritePolicy wPol, Memory *next)
         :_sets(size/(block_size*assoc)),
         _addrDec(_sets, block_size)
       {
@@ -62,29 +58,28 @@ namespace CacheSimulator
       void writeC(ui32 addr, ui8)
       {
         TagEntry &tag = cacheHit(addr);
-        if (tag)
-        {
-          _whits++;
-        }
-
+        bool dirty = true;
         switch(_wPolicy)
         {
           case e_WBWA:
-            if(tag)
+            dirty = true;
+            if(!tag)
             {
-              tag.write();
-            }
-            else
-            {
-              cacheMiss(addr).write();
+              cacheMiss(addr).write(dirty);
             }
             break;
           case e_WTNA:
+            dirty = false;
             _next->write(addr);
             break;
           default:
             throw "Invalid Write Policy";
             break;
+        }
+        if(tag)
+        {
+          _whits++;
+          tag.write(dirty);
         }
       }
       void initC()
@@ -92,9 +87,10 @@ namespace CacheSimulator
         _rhits = 0;
         _whits = 0;
         _wbacks = 0;
-        TagStore tStore(_sets);
-        for(ui32 i=0; i<_assoc; i++)
-          _tags.push_back(tStore);
+        TagSets sets(_assoc);
+        ReplacementPolicy::initLRU(sets);
+        for(ui32 i=0; i<_sets; i++)
+          _tags.push_back(sets);
       }
     private:
       // total bytes of data store
@@ -104,7 +100,7 @@ namespace CacheSimulator
       // number of bytes in a block
       ui16 _blocksize;
       // replacement policy
-      ReplacementPolicy _rPolicy;
+      ReplacementPolicy::Types _rPolicy;
       // write policy
       WritePolicy _wPolicy;
       // no of sets = size/(assoc*blocksize)
@@ -118,50 +114,73 @@ namespace CacheSimulator
       // pointer to object of AddressDecoder
       AddressDecoder _addrDec;
       // tag store memory
-      AssociateTagStore _tags;
+      TagStore _tags;
     private:
       TagEntry & cacheMiss(ui32 addr)
       {
         _next->read(addr);
         return replaceTag(addr);
       }
-      TagEntry & replaceTag(ui32 addr)
-      {
-        static TagEntry null;
-        ui32 index = _addrDec.index(addr);
-        TagEntry new_tag(_addrDec.tag(addr));
-        if(_assoc < 2)
-        {
-          TagEntry & old_tag = _tags.front().at(index);
-          if (old_tag.dirty() && old_tag)
-          {
-            _wbacks++;
-            _next->write(addr);
-          }
-          old_tag = new_tag;
-          return old_tag;
-        }
-        else
-        {
-        }
-        return null;
-      }
       TagEntry & cacheHit(ui32 addr)
       {
-        static TagEntry null;
-        null = TagEntry();
         ui32 index = _addrDec.index(addr);
         ui32 tag = _addrDec.tag(addr);
-        for(AssociateTagStore::iterator it = _tags.begin();
-            it != _tags.end(); it++)
+        TagSets & sets =  _tags[index];
+        for(TagSets::iterator it = sets.begin();
+            it != sets.end(); it++)
         {
-          TagEntry & temp = (*it)[index];
+          TagEntry & temp = (*it);
           if( (temp == tag) && temp )
           {
+            updateAccessHistory(sets, temp);
             return temp;
           }
         }
-        return null;
+        return TagEntry::invalidTag();
+      }
+      TagEntry & replaceTag(ui32 addr)
+      {
+        ui32 index = _addrDec.index(addr);
+        TagSets &sets = _tags[index];
+        TagEntry & old_tag = findTagToReplace(sets);
+        //TagEntry & old_tag = sets.front();
+        if (old_tag.dirty() && old_tag)
+        {
+          _wbacks++;
+          _next->write(addr);
+        }
+        old_tag = TagEntry(_addrDec.tag(addr));
+        updateAccessHistory(sets, old_tag);
+        return old_tag;
+      }
+      void updateAccessHistory(TagSets & sets, TagEntry &tag)
+      {
+        switch(_rPolicy)
+        {
+          case ReplacementPolicy::e_LRU:
+            ReplacementPolicy::updateLRU(sets, tag);
+            break;
+          case ReplacementPolicy::e_LFU:
+            ReplacementPolicy::updateLFU(sets, tag);
+            break;
+          default:
+            throw "Invalid replacement Policy";
+        }
+      }
+      TagEntry & findTagToReplace(TagSets & sets)
+      {
+        switch(_rPolicy)
+        {
+          case ReplacementPolicy::e_LRU:
+            return ReplacementPolicy::findLRU(sets);
+            break;
+          case ReplacementPolicy::e_LFU:
+            return ReplacementPolicy::findLFU(sets);
+            break;
+          default:
+            throw "Invalid replacement Policy";
+        }
+        return TagEntry::invalidTag();
       }
   };
 };

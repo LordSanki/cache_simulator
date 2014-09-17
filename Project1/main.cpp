@@ -20,7 +20,7 @@ int main(int argc, char **argv)
   ui16 size       = atoi(argv[2]);
   ui16 assoc      = atoi(argv[3]);
 
-  ReplacementPolicy rP  = (ReplacementPolicy)atoi(argv[4]);
+  ReplacementPolicy::Types rP  = (ReplacementPolicy::Types)atoi(argv[4]);
   WritePolicy wP        = (WritePolicy)atoi(argv[5]);
 
   //MainMemory *mm  = new MainMemory();
