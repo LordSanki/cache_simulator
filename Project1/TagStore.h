@@ -3,10 +3,11 @@
 
 #include <vector>
 #include <list>
+#include <CustomTypes.h>
 
 namespace CacheSimulator
 {
-#define UNDEFINED_HISTORY 666
+#define UNDEFINED_COUNT_BLOCK 666
   class TagEntry
   {
     public:
@@ -15,14 +16,14 @@ namespace CacheSimulator
         _dirty = false;
         _valid = true;
         _tag = tag;
-        _history = UNDEFINED_HISTORY;
+        _count_block = UNDEFINED_COUNT_BLOCK;
       }
       TagEntry()
       {
         _valid = false;
         _dirty = false;
         _tag = 0U;
-        _history = UNDEFINED_HISTORY;
+        _count_block = UNDEFINED_COUNT_BLOCK;
       }
       static TagEntry & invalidTag()
       {
@@ -43,17 +44,30 @@ namespace CacheSimulator
       {
         return (_tag == tag);
       }
-      ui32 history() const {return _history;}
-      void history(ui32 hist) {_history = hist;}
+      ui32 count_block() const {return _count_block;}
+      void count_block(ui32 hist) {_count_block = hist;}
     private:
-      ui32 _history;
+      ui32 _count_block;
       ui32 _tag;
       bool _valid;
       bool _dirty;
   };
-
-  typedef std::list<TagEntry> TagSets;
-  typedef std::vector<TagSets> TagStore;
+  
+  typedef std::list<TagEntry>::iterator TagSetIter;
+  class TagSet
+  {
+    public:
+      TagSet(ui32 count=0):_entries(count) { }
+      ui32 size() const { return _entries.size(); }
+      ui32 count_set() const { return _count_set; }
+      void count_set(ui32 val) { _count_set = val; }
+      TagSetIter begin() { return _entries.begin(); }
+      TagSetIter end() { return _entries.end(); }
+    private:
+      ui32 _count_set;
+      std::list<TagEntry> _entries;
+  }; 
+  typedef std::vector<TagSet> TagStore;
 
 };
 

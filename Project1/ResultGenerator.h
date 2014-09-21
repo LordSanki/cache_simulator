@@ -33,16 +33,14 @@ namespace CacheSimulator
         std::cout<<std::endl;
         std::cout<<"===== "<<mem->name()<<" contents ====="<<std::endl;
 
-        for(ui32 i=0; i<mem->sets(); i++)
+        for(ui32 i=0; i<mem->set(); i++)
         {
-          TagSets &sets = mem->_tags[i];
+          TagSet &set = mem->_tags[i];
           std::cout<<"set  "<<i<<":";
-          for(TagSets::const_iterator it = sets.begin();
-              it != sets.end(); it++)
+          for(TagSetIter it = set.begin(); it != set.end(); it++)
           {
-            const TagEntry &tag = (*it);
-            std::cout<<"   "<<std::hex<<tag.tag()<<std::dec;
-            if(tag.dirty())
+            std::cout<<"   "<<std::hex<<it->tag()<<std::dec;
+            if(it->dirty())
               std::cout<<" D";
           }
           std::cout<<std::endl;

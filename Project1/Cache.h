@@ -7,6 +7,8 @@
 #include <iostream>
 #include <TagStore.h>
 #include <ReplacementPolicy.h>
+#include <cassert>
+#define ASSOC
 namespace CacheSimulator
 {
   enum WritePolicy
@@ -21,8 +23,8 @@ namespace CacheSimulator
 
       Cache(ui16 block_size, ui16 size, ui16 assoc,
           ReplacementPolicy::Types rPol, WritePolicy wPol, Memory *next)
-        :_sets(size/(block_size*assoc)),
-        _addrDec(_sets, block_size)
+        :_set(size/(block_size*assoc)),
+        _addrDec(_set, block_size)
       {
         _next = next;
         _rPolicy = rPol;
@@ -38,7 +40,7 @@ namespace CacheSimulator
       ui32 size() const {return _size;}
       ui16 assoc() const {return _assoc;}
       ui16 blocksize() const {return _blocksize;}
-      ui16 sets() const {return _sets;}
+      ui16 set() const {return _set;}
       ui32 rhits() const {return _rhits;}
       ui32 whits() const {return _whits;}
       ui32 rPolicy() const {return (ui32)_rPolicy;}
@@ -87,10 +89,10 @@ namespace CacheSimulator
         _rhits = 0;
         _whits = 0;
         _wbacks = 0;
-        TagSets sets(_assoc);
-        ReplacementPolicy::initLRU(sets);
-        for(ui32 i=0; i<_sets; i++)
-          _tags.push_back(sets);
+        TagSet set(_assoc);
+        ReplacementPolicy::initLRU(set);
+        for(ui32 i=0; i<_set; i++)
+          _tags.push_back(set);
       }
     private:
       // total bytes of data store
@@ -103,8 +105,8 @@ namespace CacheSimulator
       ReplacementPolicy::Types _rPolicy;
       // write policy
       WritePolicy _wPolicy;
-      // no of sets = size/(assoc*blocksize)
-      ui16 _sets;
+      // no of set = size/(assoc*blocksize)
+      ui16 _set;
       // counter for read hits
       ui32 _rhits;
       // counter for write hits
@@ -125,15 +127,15 @@ namespace CacheSimulator
       {
         ui32 index = _addrDec.index(addr);
         ui32 tag = _addrDec.tag(addr);
-        TagSets & sets =  _tags[index];
-        for(TagSets::iterator it = sets.begin();
-            it != sets.end(); it++)
+        TagSet & set =  _tags[index];
+        for(TagSetIter it = set.begin(); it != set.end(); it++)
         {
-          TagEntry & temp = (*it);
-          if( (temp == tag) && temp )
+          if( (it->tag() == tag) && *it )
           {
-            updateAccessHistory(sets, temp);
-            return temp;
+#ifdef ASSOC
+            updateAccessHistory(set, *it);
+#endif
+            return *it;
           }
         }
         return TagEntry::invalidTag();
@@ -141,41 +143,53 @@ namespace CacheSimulator
       TagEntry & replaceTag(ui32 addr)
       {
         ui32 index = _addrDec.index(addr);
-        TagSets &sets = _tags[index];
-        TagEntry & old_tag = findTagToReplace(sets);
-        //TagEntry & old_tag = sets.front();
-        if (old_tag.dirty() && old_tag)
+        TagSet &set = _tags[index];
+#ifndef ASSOC
+        TagSetIter it = set.begin();
+        if(it->dirty())
         {
           _wbacks++;
           _next->write(addr);
         }
-        old_tag = TagEntry(_addrDec.tag(addr));
-        updateAccessHistory(sets, old_tag);
-        return old_tag;
+        *it = TagEntry(_addrDec.tag(addr));
+        assert(it->tag() == _addrDec.tag(addr));
+        assert(!it->dirty());
+        return *it;
+#else
+        TagEntry & tag = findTagToReplace(set);
+        if (tag.dirty() && tag)
+        {
+          _wbacks++;
+          _next->write(addr);
+        }
+        tag = TagEntry(_addrDec.tag(addr));
+        updateAccessHistory(set, tag);
+        return tag;
+#endif
       }
-      void updateAccessHistory(TagSets & sets, TagEntry &tag)
+      void updateAccessHistory(TagSet & set, TagEntry &ref)
       {
         switch(_rPolicy)
         {
           case ReplacementPolicy::e_LRU:
-            ReplacementPolicy::updateLRU(sets, tag);
+            ReplacementPolicy::updateLRU(set, ref);
             break;
           case ReplacementPolicy::e_LFU:
-            ReplacementPolicy::updateLFU(sets, tag);
+            ReplacementPolicy::updateLFU(set, ref);
             break;
           default:
             throw "Invalid replacement Policy";
         }
       }
-      TagEntry & findTagToReplace(TagSets & sets)
+      TagEntry & findTagToReplace(TagSet & set)
       {
         switch(_rPolicy)
         {
           case ReplacementPolicy::e_LRU:
-            return ReplacementPolicy::findLRU(sets);
+            return ReplacementPolicy::findLRU(set);
             break;
           case ReplacementPolicy::e_LFU:
-            return ReplacementPolicy::findLFU(sets);
+            return ReplacementPolicy::findLFU(set);
             break;
           default:
             throw "Invalid replacement Policy";

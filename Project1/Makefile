@@ -16,13 +16,14 @@ OBJECTS = $(SRC:%.cpp=%.o)
 all: BINARY
 
 clean:
-	rm -f $(OBJECTS) $(TARGET)
+	rm -f $(OBJECTS) $(TARGET) .depend
 
 clobber:
 	rm -f $(OBJECTS)
 
-BINARY: $(OBJECTS)
+BINARY: $(OBJECTS) $(HEADERS)
 	$(CXX) $(LFLAGS) $(OBJECTS) $(LIBS) -o $(TARGET)
 
 %.o: %.cpp
 	$(CXX) -c $(CFLAGS) $^ -o $@
+

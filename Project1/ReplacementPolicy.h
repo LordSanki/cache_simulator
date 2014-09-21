@@ -15,51 +15,67 @@ namespace CacheSimulator
       e_LFU=1
     };
 
-    void initLRU(TagSets &sets)
+    void initLRU(TagSet &set)
     {
-      ui32 i=sets.size()-1;
-      for(TagSets::iterator it = sets.begin();
-          it != sets.end(); it++)
+      ui32 i = set.size()-1;
+      for(TagSetIter it = set.begin(); it != set.end(); it++)
       {
-        it->history(i--);
+        it->count_block(i--);
       }
     }
-    TagEntry & findLRU(TagSets &sets)
+    void initLFU(TagSet &set)
     {
-#if 0
-      return sets.front();
-#else
-      ui32 max_index = sets.size() -1;
-      for(TagSets::iterator it = sets.begin();
-          it != sets.end(); it++)
+      set.count_set(0);
+/*      for(TagSetIter it = set.begin(); it != set.end(); it++)
       {
-        if(it->history() == max_index)
-          return (*it);
+        it->count_block(UNDEFINED_COUNT_BLOCK);
+      }*/
+    }
+    TagEntry & findLRU(TagSet &set)
+    {
+      ui32 max_index = set.size() -1;
+      for(TagSetIter it = set.begin(); it != set.end(); it++)
+      {
+        if(it->count_block() == max_index)
+          return *it;
       }
       throw "Unable to find LRU candidate";
       return TagEntry::invalidTag();
-#endif
     }
-    TagEntry & findLFU(TagSets &sets)
+    TagEntry & findLFU(TagSet &set)
     {
-      return TagEntry::invalidTag();
-    }
-    void updateLRU(TagSets &sets, TagEntry &ref)
-    {
-      for(TagSets::iterator it = sets.begin();
-          it != sets.end(); it++)
+      TagSetIter lfu = set.begin();
+      for(TagSetIter it = set.begin(); it != set.end(); it++)
       {
-        TagEntry &tag = (*it);
-
-        if( tag.history() < ref.history() )
+        if(lfu->count_block() > it->count_block())
         {
-          tag.history( tag.history() + 1 );
+          lfu = it;
         }
       }
-      ref.history(0);
+      set.count_set(lfu->count_block());
+      return *lfu;
     }
-    void updateLFU(TagSets &sets, TagEntry &ref)
+    void updateLRU(TagSet &set, TagEntry &ref)
     {
+      for(TagSetIter it = set.begin(); it != set.end(); it++)
+      {
+        if( it->count_block() < ref.count_block() )
+        {
+          it->count_block( it->count_block() + 1 );
+        }
+      }
+      ref.count_block(0);
+    }
+    void updateLFU(TagSet &set, TagEntry &ref)
+    {
+      if(ref.count_block() == UNDEFINED_COUNT_BLOCK)
+      {
+        ref.count_block(set.count_set()+1);
+      }
+      else
+      {
+        ref.count_block(ref.count_block()+1);
+      }
     }
   };
 };
