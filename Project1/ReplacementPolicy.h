@@ -26,10 +26,10 @@ namespace CacheSimulator
     void initLFU(TagSet &set)
     {
       set.count_set(0);
-/*      for(TagSetIter it = set.begin(); it != set.end(); it++)
+      for(TagSetIter it = set.begin(); it != set.end(); it++)
       {
-        it->count_block(UNDEFINED_COUNT_BLOCK);
-      }*/
+        it->count_block(0);
+      }
     }
     TagEntry & findLRU(TagSet &set)
     {

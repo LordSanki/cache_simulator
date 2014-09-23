@@ -33,6 +33,8 @@ namespace CacheSimulator
         std::cout<<std::endl;
         std::cout<<"===== "<<mem->name()<<" contents ====="<<std::endl;
 
+//        if(mem->rPolicy() == 0)
+        {
         for(ui32 i=0; i<mem->set(); i++)
         {
           TagSet &set = mem->_tags[i];
@@ -45,7 +47,24 @@ namespace CacheSimulator
           }
           std::cout<<std::endl;
         }
-
+        }
+#if 0
+        else
+        {
+          for(ui32 i=0; i<mem->set(); i++)
+          {
+            TagSet &set = mem->_tags[i];
+            std::cout<<"set  "<<i<<":";
+            for(TagSetRIter it = set.rbegin(); it != set.rend(); it++)
+            {
+              std::cout<<"   "<<std::hex<<it->tag()<<std::dec;
+              if(it->dirty())
+                std::cout<<" D";
+            }
+            std::cout<<std::endl;
+          }
+        }
+#endif   
         Memory *main = mem;
         while(main->next()) main = main->next();
 

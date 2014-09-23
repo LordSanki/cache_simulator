@@ -90,7 +90,22 @@ namespace CacheSimulator
         _whits = 0;
         _wbacks = 0;
         TagSet set(_assoc);
-        ReplacementPolicy::initLRU(set);
+#if 0
+            ReplacementPolicy::initLRU(set);
+#else
+        switch(_rPolicy)
+        {
+          case ReplacementPolicy::e_LRU:
+            ReplacementPolicy::initLRU(set);
+            break;
+          case ReplacementPolicy::e_LFU:
+            ReplacementPolicy::initLFU(set);
+            break;
+          default:
+            throw "Invalid Read Policy";
+            break;
+        }
+#endif
         for(ui32 i=0; i<_set; i++)
           _tags.push_back(set);
       }

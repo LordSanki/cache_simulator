@@ -7,7 +7,7 @@
 
 namespace CacheSimulator
 {
-#define UNDEFINED_COUNT_BLOCK 666
+#define UNDEFINED_COUNT_BLOCK 0xfffffffe
   class TagEntry
   {
     public:
@@ -54,15 +54,18 @@ namespace CacheSimulator
   };
   
   typedef std::list<TagEntry>::iterator TagSetIter;
+  typedef std::list<TagEntry>::reverse_iterator TagSetRIter;
   class TagSet
   {
     public:
-      TagSet(ui32 count=0):_entries(count) { }
+      TagSet(ui32 count=0):_entries(count) { _count_set = 0; }
       ui32 size() const { return _entries.size(); }
       ui32 count_set() const { return _count_set; }
       void count_set(ui32 val) { _count_set = val; }
       TagSetIter begin() { return _entries.begin(); }
       TagSetIter end() { return _entries.end(); }
+      TagSetRIter rbegin() { return _entries.rbegin(); }
+      TagSetRIter rend() { return _entries.rend(); }
     private:
       ui32 _count_set;
       std::list<TagEntry> _entries;
