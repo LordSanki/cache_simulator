@@ -17,52 +17,49 @@ namespace CacheSimulator
 
     void initLRU(TagSet &set)
     {
-      ui32 i = set.size()-1;
-      for(TagSetIter it = set.begin(); it != set.end(); it++)
+      i32 counter = set.size()-1;
+      for (ui32 i = 0; i<set.size(); i++)
       {
-        it->count_block(i--);
+        set[i].count_block(counter--);
       }
     }
     void initLFU(TagSet &set)
     {
       set.count_set(0);
-      for(TagSetIter it = set.begin(); it != set.end(); it++)
+      for (ui32 i = 0; i<set.size(); i++)
       {
-        it->count_block(0);
+        set[i].count_block(0);
       }
     }
     TagEntry & findLRU(TagSet &set)
     {
       ui32 max_index = set.size() -1;
-      for(TagSetIter it = set.begin(); it != set.end(); it++)
+      for (ui32 i = 0; i<set.size(); i++)
       {
-        if(it->count_block() == max_index)
-          return *it;
+        if(set[i].count_block() == max_index)
+          return set[i];
       }
+
       throw "Unable to find LRU candidate";
       return TagEntry::invalidTag();
     }
     TagEntry & findLFU(TagSet &set)
     {
-      TagSetIter lfu = set.begin();
-      for(TagSetIter it = set.begin(); it != set.end(); it++)
+      i32 lfu_index = 0;
+      for (ui32 i = 1; i<set.size(); i++)
       {
-        if(lfu->count_block() > it->count_block())
-        {
-          lfu = it;
-        }
+        if(set[lfu_index].count_block() > set[i].count_block())
+          lfu_index = i;
       }
-      set.count_set(lfu->count_block());
-      return *lfu;
+      set.count_set( set[lfu_index].count_block() );
+      return set[lfu_index];
     }
     void updateLRU(TagSet &set, TagEntry &ref)
     {
-      for(TagSetIter it = set.begin(); it != set.end(); it++)
+      for (ui32 i = 0; i<set.size(); i++)
       {
-        if( it->count_block() < ref.count_block() )
-        {
-          it->count_block( it->count_block() + 1 );
-        }
+        if( set[i].count_block() < ref.count_block())
+          set[i].count_block( set[i].count_block()+1 );
       }
       ref.count_block(0);
     }

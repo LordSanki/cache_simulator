@@ -46,6 +46,7 @@ namespace CacheSimulator
       ui32 rPolicy() const {return (ui32)_rPolicy;}
       ui32 wPolicy() const {return (ui32)_wPolicy;}
       ui32 wbacks() const {return _wbacks;}
+      virtual bool isCache() {return true;}
     protected:
       // function to read data
       ui8 readC(ui32 addr)
@@ -90,9 +91,7 @@ namespace CacheSimulator
         _whits = 0;
         _wbacks = 0;
         TagSet set(_assoc);
-#if 0
-            ReplacementPolicy::initLRU(set);
-#else
+        
         switch(_rPolicy)
         {
           case ReplacementPolicy::e_LRU:
@@ -105,7 +104,6 @@ namespace CacheSimulator
             throw "Invalid Read Policy";
             break;
         }
-#endif
         for(ui32 i=0; i<_set; i++)
           _tags.push_back(set);
       }
@@ -143,15 +141,14 @@ namespace CacheSimulator
         ui32 index = _addrDec.index(addr);
         ui32 tag = _addrDec.tag(addr);
         TagSet & set =  _tags[index];
-        for(TagSetIter it = set.begin(); it != set.end(); it++)
+        for( ui32 i=0; i<set.size(); i++)
         {
-          if( (it->tag() == tag) && *it )
+          if( (set[i].tag() == tag) && set[i] )
           {
-#ifdef ASSOC
-            updateAccessHistory(set, *it);
-#endif
-            return *it;
+            updateAccessHistory(set, set[i]);
+            return set[i];
           }
+
         }
         return TagEntry::invalidTag();
       }
@@ -159,18 +156,7 @@ namespace CacheSimulator
       {
         ui32 index = _addrDec.index(addr);
         TagSet &set = _tags[index];
-#ifndef ASSOC
-        TagSetIter it = set.begin();
-        if(it->dirty())
-        {
-          _wbacks++;
-          _next->write(addr);
-        }
-        *it = TagEntry(_addrDec.tag(addr));
-        assert(it->tag() == _addrDec.tag(addr));
-        assert(!it->dirty());
-        return *it;
-#else
+
         TagEntry & tag = findTagToReplace(set);
         if (tag.dirty() && tag)
         {
@@ -180,7 +166,6 @@ namespace CacheSimulator
         tag = TagEntry(_addrDec.tag(addr));
         updateAccessHistory(set, tag);
         return tag;
-#endif
       }
       void updateAccessHistory(TagSet & set, TagEntry &ref)
       {

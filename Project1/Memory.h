@@ -50,6 +50,7 @@ namespace CacheSimulator
         if(_next)
           delete _next;
       }
+      virtual bool isCache() {return false;}
 
     protected:
       // abstract function for initialization of memory

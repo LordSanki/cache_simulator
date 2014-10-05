@@ -53,22 +53,14 @@ namespace CacheSimulator
       bool _dirty;
   };
   
-  typedef std::list<TagEntry>::iterator TagSetIter;
-  typedef std::list<TagEntry>::reverse_iterator TagSetRIter;
-  class TagSet
+  class TagSet : public std::vector<TagEntry>
   {
     public:
-      TagSet(ui32 count=0):_entries(count) { _count_set = 0; }
-      ui32 size() const { return _entries.size(); }
+      TagSet(ui32 count=0):std::vector<TagEntry>(count) { _count_set = 0; }
       ui32 count_set() const { return _count_set; }
       void count_set(ui32 val) { _count_set = val; }
-      TagSetIter begin() { return _entries.begin(); }
-      TagSetIter end() { return _entries.end(); }
-      TagSetRIter rbegin() { return _entries.rbegin(); }
-      TagSetRIter rend() { return _entries.rend(); }
     private:
       ui32 _count_set;
-      std::list<TagEntry> _entries;
   }; 
   typedef std::vector<TagSet> TagStore;
 
