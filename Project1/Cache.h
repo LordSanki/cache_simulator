@@ -133,8 +133,9 @@ namespace CacheSimulator
     private:
       TagEntry & cacheMiss(ui32 addr)
       {
+        TagEntry &tag = replaceTag(addr);
         _next->read(addr);
-        return replaceTag(addr);
+        return tag;
       }
       TagEntry & cacheHit(ui32 addr)
       {
@@ -161,7 +162,8 @@ namespace CacheSimulator
         if (tag.dirty() && tag)
         {
           _wbacks++;
-          _next->write(addr);
+          ui32 wb_addr = _addrDec.generate(tag.tag(), _addrDec.index(addr));
+          _next->write(wb_addr);
         }
         tag = TagEntry(_addrDec.tag(addr));
         updateAccessHistory(set, tag);

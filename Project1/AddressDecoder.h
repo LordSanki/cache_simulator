@@ -34,6 +34,12 @@ namespace CacheSimulator
       {
         return addr&_boMask;
       }
+      //function to generate address by combining tag index and blockoffset
+      ui32 generate(ui32 tag, ui32 index, ui32 bo=0)
+      {
+        return (tag<<(_boBits+_indexBits))|(index<<_boBits)|bo;
+      }
+
     private:
       // no of tag bits = address_size - (index_bits + blockoffset_bits)
       ui16 _tagBits;

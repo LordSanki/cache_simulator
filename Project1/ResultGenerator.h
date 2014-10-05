@@ -93,15 +93,19 @@ namespace CacheSimulator
             std::cout<<"   "<<std::hex<<set[j].tag()<<std::dec;
             if(set[j].dirty())
               std::cout<<" D";
-#if 0
-            std::cout<<std::hex<<it->tag()<<std::dec;
-            if(it->dirty())
+          }
+#else
+          set.sort();
+          for (ui32 j=0; j<set.size(); j++)
+          {
+            std::cout<<std::hex<<set[j].tag()<<std::dec;
+            if(set[j].dirty())
               std::cout<<" D  ";
             else
               std::cout<<"    ";
-#endif
           }
 #endif
+
           std::cout<<std::endl;
         }
       }
