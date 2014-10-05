@@ -8,7 +8,6 @@
 #include <cmath>
 namespace CacheSimulator
 {
-#define ROUNDFACTOR 10000
   class ResultGenerator
   {
     public:
@@ -63,16 +62,6 @@ namespace CacheSimulator
     private:
       c8 **_argv;
       i32 _argc;
-      f64 round_to(f64 val, ui32 digits)
-      {
-        ui32 factor = 1U;
-        while(digits !=0)
-        {
-          factor = factor*10U;
-          digits--;
-        }
-        return (round(val*factor)/factor);
-      }
 
       void printCacheContents(Cache * cache)
       {
@@ -126,14 +115,17 @@ namespace CacheSimulator
           b = ch->reads() - ch->rhits();
           c = ch->writes();
           d = ch->writes() - ch->whits();
-          e = round_to( ((f64)b+d)/(a+c), 4U);
+          if(t->name() == "L1")
+            e = ((f64)b+d)/(a+c);
+          else
+            e =  ((f64)b)/(a);
           f = ch->wbacks();
 
           std::cout<<srNo++<<". number of "<<t->name()<<" reads:              "<< a <<std::endl;
           std::cout<<srNo++<<". number of "<<t->name()<<" read misses:        "<< b <<std::endl;
           std::cout<<srNo++<<". number of "<<t->name()<<" writes:             "<< c <<std::endl;
           std::cout<<srNo++<<". number of "<<t->name()<<" write misses:       "<< d <<std::endl;
-          std::cout<<srNo++<<". "<<t->name()<<" miss rate:                    "<< e <<std::endl;
+          std::cout<<srNo++<<". "<<t->name()<<" miss rate:                    "<<std::fixed<<std::setprecision(4)<< e <<std::endl;
 #ifdef PROJ1A
           std::cout<<srNo++<<". number of writebacks from "<<t->name()<<":    "<< f <<std::endl;
 #else
@@ -144,48 +136,47 @@ namespace CacheSimulator
           }
           else
           {
-            std::cout<<srNo++<<". number of "<<t->name()<<" writebacks:    "<< f <<std::endl;
+            std::cout<<srNo++<<". number of "<<t->name()<<" writebacks:         "<< f <<std::endl;
           }
 #endif
           t = t->next();
         }
 
         g = t->writes() + t->reads();
-        std::cout<<srNo++<<". total memory traffic:         "<< g <<std::endl;
+        std::cout<<srNo++<<". total memory traffic:            "<< g <<std::endl;
       }
 
-      void printSimulationResultsPerformance(Memory *mem_)
+      void printSimulationResultsPerformance(Memory *mem)
       {
-        Cache *mem = (Cache*)mem_;
+
+        Cache *l1 = (Cache*)mem;
+
+        f64 l1_hit_time = 0.25 + 2.5 * (l1->size() / (512.0*1024))
+            + 0.025 * (l1->blocksize()/16.0) + 0.025 * l1->assoc();
+
+        f64 l1_miss_rate = ((l1->reads() - l1->rhits()) + (l1->writes() - l1->whits()))
+                            /((f64)(l1->reads() + l1->writes()));
+
+        f64 l1_miss_penalty = (20.0 + 0.5*(l1->blocksize() / 16.0 ));
+
 #ifdef PROJ1A
-        ui32 a,b,c,d, f, g;
-        f32 e;
-        Cache *ch = mem;
-        a = ch->reads();
-        b = ch->reads() - ch->rhits();
-        c = ch->writes();
-        d = ch->writes() - ch->whits();
-        e = round_to( ((f64)b+d)/(a+c), 4U);
-        f = ch->wbacks();
-       
-        f64 l1_hit_time = (0.25 + 2.5 * (mem->size() / (512.0f*1024))
-            + 0.025 * (mem->blocksize()/16.0f) + 0.025 * mem->assoc());
-        f64 l1_miss_time = (20.0f + 0.5*(mem->blocksize() / 16.0f ));
-        f64 avg_access_time = l1_hit_time + (((f64)b+d)/(a+c) * l1_miss_time);
+        f64 avg_access_time = l1_hit_time + (l1_miss_rate * l1_miss_penalty);
 #else
-        f64 avg_access_time = 0;
-/*        f64 l1_hit_time = ((a+c))
-          *(0.25 + 2.5 * (mem->size() / (512.0f*1024)) 
-           + 0.025 * (mem->blocksize()/16.0f) + 0.025 * mem->assoc());
-        f64 l1_miss_time = (b+d)*(20.0f + 0.5*(mem->blocksize() / 16.0f ));
-        //f64 l2_hit_time = 2.5ns + 2.5ns * (L2_Cache Size / 512kB) + 0.025ns * (L2_BLOCKSIZE / 16B) + 0.025ns * L2_SET_ASSOCIATIVITY;
-        //f64 l2_miss_time =  20 ns + 0.5*(L2_BLOCKSIZE / 16 B/ns);
-        
-        f64 avg_access_time = (l1_hit_time+l1_miss_time)/(a+c);*/
+        Cache *l2 = (Cache*)l1->next();
+
+        f64 l2_hit_time = 2.5 + 2.5 * (l2->size() / (512.0*1024)) 
+            + 0.025 * (l2->blocksize() / 16) + 0.025 * l2->assoc();
+
+        f64 l2_miss_penalty = 20  + 0.5*(l2->blocksize() / 16.0 );
+
+        f64 l2_miss_rate = (l2->reads() - l2->rhits())/((f64)l2->reads());
+
+        f64 avg_access_time = l1_hit_time + (l1_miss_rate *(l2_hit_time + l2_miss_rate*l2_miss_penalty));
 #endif
-        avg_access_time = round_to(avg_access_time, 4U);
         std::cout<<"==== Simulation results (performance) ===="<<std::endl;
-        std::cout<<"1. average access time:         "<< avg_access_time <<" ns"<<std::endl;
+        std::cout<<"1. average access time:         ";
+        std::cout<<std::fixed<<std::setprecision(4)<<avg_access_time;
+        std::cout <<" ns"<<std::endl;
       }
   };
 };
