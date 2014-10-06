@@ -110,7 +110,7 @@ namespace CacheSimulator
         if (n < 1)
           return;
         i32 pivot = start + n/2;
-        i32 p = at(pivot).count_block();
+        ui32 p = at(pivot).count_block();
         i32 s = start;
         i32 e = end;
         while (s <= e)
