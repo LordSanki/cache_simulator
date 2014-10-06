@@ -13,6 +13,7 @@ namespace CacheSimulator
       {
         _next = NULL;
         name("MainMemory");
+        _valid = true;
       }
       ~MainMemory() 
       {

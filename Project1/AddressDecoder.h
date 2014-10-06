@@ -9,15 +9,21 @@ namespace CacheSimulator
   class AddressDecoder
   {
     public:
+      AddressDecoder()
+      {
+        _initialized = false;
+      }
       // parameterized constructor for variable address size
       AddressDecoder(ui16 sets, ui16 block_size, ui8 address_size)
       {
         init(sets, block_size, address_size);
+        _initialized = true;
       }
       // parameterized constructor assuming 32 bit addresses
       AddressDecoder(ui16 sets, ui16 block_size)
       {
         init(sets, block_size, DEFAULT_ADDR_SIZE);
+        _initialized = true;
       }
       // function to get tag
       ui32 tag(ui32 addr)
@@ -34,12 +40,25 @@ namespace CacheSimulator
       {
         return addr&_boMask;
       }
+      ui32 tag_index(ui32 addr)
+      {
+        return addr>>_boBits;
+      }
       //function to generate address by combining tag index and blockoffset
       ui32 generate(ui32 tag, ui32 index, ui32 bo=0)
       {
         return (tag<<(_boBits+_indexBits))|(index<<_boBits)|bo;
       }
+      ui32 assemble(ui32 tag, ui32 index)
+      {
+        return (tag<<_indexBits)|index;
+      }
+      ui32 disassemble(ui32 tag)
+      {
+        return (tag>>_indexBits);
+      }
 
+      operator bool() { return _initialized; }
     private:
       // no of tag bits = address_size - (index_bits + blockoffset_bits)
       ui16 _tagBits;
@@ -53,6 +72,8 @@ namespace CacheSimulator
       ui32 _indexMask;
       // bit mask for extracting blockoffset bits
       ui32 _boMask;
+      // flag to check if AddressDecoder is initialized.
+      bool _initialized;
     private:
       ui16 find_log2(ui16 val)
       {

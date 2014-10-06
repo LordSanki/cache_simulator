@@ -32,7 +32,18 @@ namespace CacheSimulator
         null = TagEntry();
         return null;
       }
+      static void swap(TagEntry &t1, TagEntry& t2)
+      {
+        TagEntry t3 = t2;
+        t2._valid = t1._valid;
+        t2._dirty = t1._dirty;
+        t2._tag = t1._tag;
+        t1._tag = t3._tag;
+        t1._valid = t3._valid;
+        t1._dirty = t3._dirty;
+      }
       ui32 tag() const {return _tag;}
+      void tag(ui32 addr) {_tag = addr;}
       void read() { }
       void write(bool flag) { _dirty = flag; }
       bool dirty() const { return _dirty; }
@@ -47,6 +58,17 @@ namespace CacheSimulator
       }
       ui32 count_block() const {return _count_block;}
       void count_block(ui32 hist) {_count_block = hist;}
+      void reset(ui32 tag) 
+      {
+        _tag = tag;
+        _valid = true;
+        _dirty = false;
+      }
+      void copy(TagEntry &other)
+      {
+        TagEntry t = other;
+        TagEntry::swap(t, *this);
+      }
     private:
       ui32 _count_block;
       ui32 _tag;

@@ -39,7 +39,6 @@ namespace CacheSimulator
         if(set[i].count_block() == max_index)
           return set[i];
       }
-
       throw "Unable to find LRU candidate";
       return TagEntry::invalidTag();
     }

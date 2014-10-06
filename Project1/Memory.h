@@ -16,7 +16,8 @@ namespace CacheSimulator
       {
         _reads = 0;
         _writes = 0;
-        initC ();
+        if(_valid)
+          initC ();
         if(_next)
           _next->init();
       }
@@ -24,14 +25,28 @@ namespace CacheSimulator
       // function to read data
       ui8 read(ui32 addr)
       {
-        _reads++;
-        return readC (addr);
+        if(_valid)
+        {
+          _reads++;
+          return readC (addr);
+        }
+        else if (_next)
+          return _next->read(addr);
+        else
+          return DATA;
       }
       // function to write data
       void write(ui32 addr, ui8 data = DATA)
       {
-        _writes++;
-        writeC (addr, data);
+        if (_valid)
+        {
+          _writes++;
+          writeC (addr, data);
+        }
+        else if (_next)
+          return _next->write(addr, data);
+        else
+          return;
       }
 
       // getter for reads
@@ -51,6 +66,7 @@ namespace CacheSimulator
           delete _next;
       }
       virtual bool isCache() {return false;}
+      operator bool() {return _valid;}
 
     protected:
       // abstract function for initialization of memory
@@ -61,6 +77,8 @@ namespace CacheSimulator
       virtual void writeC (ui32 addr, ui8 data) = 0;
       // pointer to object of next memory
       Memory *_next;
+      //flag to store if cache configuration is valid
+      bool _valid;
 
     private:
       // counter for tracking reads

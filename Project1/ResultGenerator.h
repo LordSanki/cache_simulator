@@ -48,7 +48,8 @@ namespace CacheSimulator
         Memory *t = mem;
         while(t->isCache())
         {
-          printCacheContents((Cache*) t);
+          if(*t)
+            printCacheContents((Cache*) t);
           t = t->next();
         }
 #endif
@@ -94,7 +95,22 @@ namespace CacheSimulator
               std::cout<<"    ";
           }
 #endif
-
+          std::cout<<std::endl;
+        }
+        if(cache->hasVictimCache())
+        {
+          std::cout<<"===== Victim Cache contents ====="<<std::endl;
+          std::cout<<"set 0: ";
+          TagSet & set = *(cache->_victimCache);
+          set.sort();
+          for(ui32 i=0; i<set.size(); i++)
+          {
+            std::cout<<std::hex<<set[i].tag()<<std::dec;
+            if(set[i].dirty())
+              std::cout<<" D  ";
+            else
+              std::cout<<"    ";
+          }
           std::cout<<std::endl;
         }
       }
@@ -117,26 +133,31 @@ namespace CacheSimulator
           d = ch->writes() - ch->whits();
           if(t->name() == "L1")
             e = ((f64)b+d)/(a+c);
+          else if( *t)
+            e = ((f64)b)/(a);
           else
-            e =  ((f64)b)/(a);
+            e = 0;
           f = ch->wbacks();
 
           std::cout<<srNo++<<". number of "<<t->name()<<" reads:              "<< a <<std::endl;
           std::cout<<srNo++<<". number of "<<t->name()<<" read misses:        "<< b <<std::endl;
           std::cout<<srNo++<<". number of "<<t->name()<<" writes:             "<< c <<std::endl;
           std::cout<<srNo++<<". number of "<<t->name()<<" write misses:       "<< d <<std::endl;
-          std::cout<<srNo++<<". "<<t->name()<<" miss rate:                    "<<std::fixed<<std::setprecision(4)<< e <<std::endl;
+          if(*ch)
+            std::cout<<srNo++<<". "<<ch->name()<<" miss rate:                    "<<std::fixed<<std::setprecision(4)<< e <<std::endl;
+          else
+            std::cout<<srNo++<<". "<<ch->name()<<" miss rate:                    0"<<std::endl;
 #ifdef PROJ1A
-          std::cout<<srNo++<<". number of writebacks from "<<t->name()<<":    "<< f <<std::endl;
+          std::cout<<srNo++<<". number of writebacks from "<<ch->name()<<":    "<< f <<std::endl;
 #else
-          if(t->name() == "L1")
+          if(ch->name() == "L1")
           {
-            std::cout<<srNo++<<". number of swaps:                  "<< 0 <<std::endl;
-            std::cout<<srNo++<<". number of victim cache writeback: "<< 0 <<std::endl;
+            std::cout<<srNo++<<". number of swaps:                  "<< ch->vswaps() <<std::endl;
+            std::cout<<srNo++<<". number of victim cache writeback: "<< ch->vwbacks() <<std::endl;
           }
           else
           {
-            std::cout<<srNo++<<". number of "<<t->name()<<" writebacks:         "<< f <<std::endl;
+            std::cout<<srNo++<<". number of "<<ch->name()<<" writebacks:         "<< f <<std::endl;
           }
 #endif
           t = t->next();
@@ -148,31 +169,40 @@ namespace CacheSimulator
 
       void printSimulationResultsPerformance(Memory *mem)
       {
+        Cache *l1, *l2;
+        f64 l1_hit_time, l1_miss_penalty, l1_miss_rate;
+        f64 l2_hit_time, l2_miss_penalty, l2_miss_rate;
+        f64 avg_access_time;
 
-        Cache *l1 = (Cache*)mem;
+        
+        l1 = (Cache*)mem;
 
-        f64 l1_hit_time = 0.25 + 2.5 * (l1->size() / (512.0*1024))
-            + 0.025 * (l1->blocksize()/16.0) + 0.025 * l1->assoc();
 
-        f64 l1_miss_rate = ((l1->reads() - l1->rhits()) + (l1->writes() - l1->whits()))
-                            /((f64)(l1->reads() + l1->writes()));
+        l1_hit_time = 0.25 + 2.5 * (l1->size() / (512.0*1024))
+                        + 0.025 * (l1->blocksize()/16.0) + 0.025 * l1->assoc();
 
-        f64 l1_miss_penalty = (20.0 + 0.5*(l1->blocksize() / 16.0 ));
+        l1_miss_rate = ((l1->reads() - l1->rhits()) + (l1->writes() - l1->whits()))
+                        /((f64)(l1->reads() + l1->writes()));
 
-#ifdef PROJ1A
-        f64 avg_access_time = l1_hit_time + (l1_miss_rate * l1_miss_penalty);
-#else
-        Cache *l2 = (Cache*)l1->next();
+        l1_miss_penalty = (20.0 + 0.5*(l1->blocksize() / 16.0 ));
 
-        f64 l2_hit_time = 2.5 + 2.5 * (l2->size() / (512.0*1024)) 
+        l2 = (Cache*)l1->next();
+        if(l2 && *l2 && l2->isCache())
+        {
+          l2_hit_time = 2.5 + 2.5 * (l2->size() / (512.0*1024)) 
             + 0.025 * (l2->blocksize() / 16) + 0.025 * l2->assoc();
 
-        f64 l2_miss_penalty = 20  + 0.5*(l2->blocksize() / 16.0 );
+          l2_miss_penalty = 20  + 0.5*(l2->blocksize() / 16.0 );
 
-        f64 l2_miss_rate = (l2->reads() - l2->rhits())/((f64)l2->reads());
+          l2_miss_rate = (l2->reads() - l2->rhits())/((f64)l2->reads());
 
-        f64 avg_access_time = l1_hit_time + (l1_miss_rate *(l2_hit_time + l2_miss_rate*l2_miss_penalty));
-#endif
+          avg_access_time = l1_hit_time + (l1_miss_rate *(l2_hit_time + l2_miss_rate*l2_miss_penalty));
+        }
+        else
+        {
+          avg_access_time = l1_hit_time + (l1_miss_rate * l1_miss_penalty);
+        }
+        
         std::cout<<"==== Simulation results (performance) ===="<<std::endl;
         std::cout<<"1. average access time:         ";
         std::cout<<std::fixed<<std::setprecision(4)<<avg_access_time;

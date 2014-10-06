@@ -78,7 +78,7 @@ int main(int argc, char **argv)
   try
   {
     Cache *l2 = new Cache( block_size, l2_size, l2_assoc, rP, wP, (Memory*)new MainMemory());
-    Cache *l1 = new Cache( block_size, l1_size, l1_assoc, rP, wP, (Memory*)l2);
+    Cache *l1 = new Cache( block_size, l1_size, l1_assoc, rP, wP, (Memory*)l2, victim_size);
 
     l1->init(); 
     l1->name("L1");
