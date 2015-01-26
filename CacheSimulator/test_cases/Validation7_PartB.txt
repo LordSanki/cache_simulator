@@ -5,7 +5,7 @@ L1_ASSOC:                     8
 Victim_Cache_SIZE:            0
 L2_SIZE:                      8192
 L2_ASSOC:                     4
-trace_file:                   go_trace.txt
+trace_file:                   traces/go_trace.txt
 ===================================
 ===== L1 contents =====
 set 0: 800470 D  80046f D  80046e D  80046d D  80046c D  80046b D  80046a D  800469 D  

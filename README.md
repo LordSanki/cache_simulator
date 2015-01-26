@@ -14,6 +14,8 @@ $> make
 
 How to run unit tests
 ----------------
+The script runs the binary with predefined test inputs and diffs the result with expected output files.
+If test are successfull no output will be displayed else difference is printed to the screen.
 ```bash
 $>./verifyB.sh
 ```

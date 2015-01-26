@@ -5,7 +5,7 @@ L1_ASSOC:                     8
 Victim_Cache_SIZE:            256
 L2_SIZE:                      0
 L2_ASSOC:                     0
-trace_file:                   perl_trace.txt
+trace_file:                   traces/perl_trace.txt
 ===================================
 ===== L1 contents =====
 set 0: 8003d7    80037c D  800276 D  8003d8    800379    800368    f6067b D  8003d9    
